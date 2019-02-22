@@ -5,6 +5,28 @@ import re
 import os
 
 
+def fullTag(tag):
+    """
+    Args:
+        tag: string in format '[<user>/]<tag>[:<version>]'
+
+    Returns:
+        string in format '<user>/<tag>:<version>'
+
+    Raises:
+        ValueError
+    """
+    match = re.match(r"^(?:([\w]{0,64})\/)?([\w][\w.-]{0,64})"
+                     r"(?::([\w.-]{1,32}))?$", args.tag)
+    if not match:
+        raise NameError("'{0}' is not a valid image tag, should be "
+                        "'[<user>/]<name>[:<version>]'".format(args.tag))
+    user, tag, version = match.groups()
+    user = user or getpass.getuser()
+    version = version or "latest"
+    return "{0}/{1}:{2}".format(user, tag, version)
+
+
 def getMounts(mounts):
     """
     Args:
@@ -87,11 +109,15 @@ if __name__ == "__main__":
                         "'ro' - for mounting in read-only mode")
     parser.add_argument("-p", "--port", type=str, action="append",
                         help="Forwarded ports '<port>' or '<port>:<internal port>'")
+    parser.add_argument("--root", action='store_true',
+                        help="Build image with root user")
+    parser.add_argument("cmd", type=str, nargs="?", action="append", default=None,
+                        help="Command to be executed in container")
     args = parser.parse_args()
 
     command = []
     if args.gpu:
-        # <1-5 digits>[,<1-5 digits>](0-9 times)
+        # 1-10 numbers in [0, 9]
         if re.match(r"^(?:[0-9],){0,9}[0-9]$", args.gpu):
             # set environment variable NV_GPU to declare visible devices
             os.putenv("NV_GPU", args.gpu)
@@ -103,21 +129,17 @@ if __name__ == "__main__":
         # if no GPUs required, using docker - for machines without nvidia-docker
         command.append("docker")
 
-    command.extend(["run", "-it", "--rm", "--user",
-                    "{0}:{1}".format(os.getuid(), os.getgid())])
+    command.extend(["run", "-it", "--rm"])
+    if not args.root:
+        command.extend(["--user", "{0}:{1}".format(os.getuid(), os.getgid())])
     command.extend(getMounts(args.mount))
     command.extend(getPorts(args.port))
 
-    # original tag regex from docker sources
-    match = re.match(r"^(?:([\w]{0,64})\/)?([\w][\w.-]{0,64})(?::([\w.-]{1,32}))?$", args.tag)
-    if match:
-        user, tag, version = match.groups()
-        user = user or getpass.getuser()
-        version = version or "latest"
-        command.append("{0}/{1}:{2}".format(user, tag, version))
+    imageTag = fullTag(args.tag)
+    command.append(imageTag)
+    if args.cmd[0]:
+        command.extend(args.cmd)
     else:
-        raise NameError("'{0}' is not a valid image tag, "
-                        "should be '<name>[:<version>]'".format(args.tag))
-
+        command.append("bash")
     # run command (docker/nvidia-docker) and pass arguments (including command itself)
     os.execvp(command[0], command)
