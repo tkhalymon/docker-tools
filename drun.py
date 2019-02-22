@@ -78,7 +78,7 @@ def getPorts(ports):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run docker image")
-    parser.add_argument("tag", type=str, help="Docker image tag (name)")
+    parser.add_argument("tag", type=str, help="Docker image tag [<user>/]<tag>[:<version>]")
     parser.add_argument("-g", "--gpu", type=str,
                         help="Visible GPU devices - comma-"
                         "separated GPU IDs: '0', '0,1', etc.")
@@ -109,8 +109,12 @@ if __name__ == "__main__":
     command.extend(getPorts(args.port))
 
     # original tag regex from docker sources
-    if re.match(r"^([\w][\w.-]{0,64})(?::([\w.-]{1,32}))?$", args.tag):
-        command.extend(["-t", "{0}/{1}".format(getpass.getuser(), args.tag)])
+    match = re.match(r"^(?:([\w]{0,64})\/)?([\w][\w.-]{0,64})(?::([\w.-]{1,32}))?$", args.tag)
+    if match:
+        user, tag, version = match.groups()
+        user = user or getpass.getuser()
+        version = version or "latest"
+        command.append("{0}/{1}:{2}".format(user, tag, version))
     else:
         raise NameError("'{0}' is not a valid image tag, "
                         "should be '<name>[:<version>]'".format(args.tag))
