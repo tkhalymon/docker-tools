@@ -49,7 +49,6 @@ def getMounts(mounts):
                               ":<target path>[:ro]'".format(mount))
         else:
             source, target, readonly = match.groups()
-            readonly = "true" if readonly else "false"
             if not os.path.isdir(source):
                 raise IOError("Mount: source path '{0}' "
                               "is not a directory".format(source))
@@ -58,6 +57,7 @@ def getMounts(mounts):
             if not os.path.isabs(target):
                 raise ValueError("Mount: target path '{0}' "
                                  "should be absolute".format(target))
+            readonly = "true" if readonly else "false"
             result.append("--mount")
             result.append("type=bind,src={0},dst={1},ro={2}"
                           "".format(source, target, readonly))
