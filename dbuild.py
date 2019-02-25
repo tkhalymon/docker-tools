@@ -42,10 +42,10 @@ def userLayers(tag):
     """
     # empty line in case original Dockerfile not ends with line break
     result = ["FROM {0}".format(tag)]
-    result.extend(["ARG user_name", "ARG user_id"])
+    result.extend(["ARG user_name", "ARG user_id", "ARG group_id"])
     # create user with home directory, add it to sudo group
     # install sudo package and allow password-less sudo
-    result.append("RUN useradd -mu $user_id -s /bin/bash $user_name && "
+    result.append("RUN groupadd -g $group_id $user_name && useradd -mu $user_id -g $group_id -s /bin/bash $user_name && "
                   "usermod -aG sudo $user_name && "
                   "apt-get update && apt-get install -y sudo && "
                   "echo \"ALL ALL = (ALL) NOPASSWD: ALL\" >> /etc/sudoers")
@@ -110,7 +110,8 @@ if __name__ == "__main__":
     if not args.root:
         command = ["docker", "build", "-t", imageTag]
         command.extend(["--build-arg", "user_name={0}".format(getpass.getuser())])
-        command.extend(["--build-arg", "user_id={0}".format(os.getgid())])
+        command.extend(["--build-arg", "user_id={0}".format(os.getuid())])
+        command.extend(["--build-arg", "group_id={0}".format(os.getgid())])
         # tell docker to read Dockerfile from stdin
         command.append("-")
         # layers for running container with current user
