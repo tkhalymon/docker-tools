@@ -45,13 +45,14 @@ def userLayers(tag):
     result.extend(["ARG user_name", "ARG user_id", "ARG group_id"])
     # create user with home directory, add it to sudo group
     # install sudo package and allow password-less sudo
-    result.append("RUN groupadd -g $group_id $user_name && useradd -mu $user_id -g $group_id -s /bin/bash $user_name && "
+    result.append("RUN groupadd -g $group_id $user_name && "
+                  "useradd -mu $user_id -g $group_id -s /bin/bash $user_name && "
                   "usermod -aG sudo $user_name && "
                   "apt-get update && apt-get install -y sudo && "
                   "echo \"ALL ALL = (ALL) NOPASSWD: ALL\" >> /etc/sudoers")
     # login to container as <user> and set working directory to $HOME
     result.extend(["USER $user_name", "WORKDIR \"/home/$user_name\""])
-    return [x + "\n" for x in result]
+    return "\n".join(result)
 
 
 def buildArgs(args):
@@ -115,7 +116,7 @@ if __name__ == "__main__":
         # tell docker to read Dockerfile from stdin
         command.append("-")
         # layers for running container with current user
-        with tempfile.TemporaryFile() as dockerfile:
+        with tempfile.TemporaryFile(mode="w") as dockerfile:
             # write user layers to temp file
             dockerfile.writelines(userLayers(imageTag))
             # flush file buffer
