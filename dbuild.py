@@ -81,15 +81,16 @@ if __name__ == "__main__":
                         help="docker file name ('Dockerfile' is default)")
     parser.add_argument("-p", "--path", type=str, default=".",
                         help="Path to docker context used by COPY. "
-                        "('.' is default)")
+                        "(default is current working directory)")
     parser.add_argument("--build-arg", type=str, action="append",
                         help="Builld arguments passed to docker: "
                         "'<key>=<value>'")
     parser.add_argument("--root", action='store_true',
                         help="Build image without adding current user")
-    args = parser.parse_args()
+    args, docker_args = parser.parse_known_args()
 
     command = ["docker", "build"]
+    command.extend(docker_args)
     imageTag = fullTag(args.tag)
     command.extend(["-t", imageTag])
     command.extend(buildArgs(args.build_arg))
@@ -109,7 +110,7 @@ if __name__ == "__main__":
         exit(error)
 
     if not args.root:
-        command = ["docker", "build", "-t", imageTag]
+        command = ["docker", "build", "--force-rm", "-t", imageTag]
         command.extend(["--build-arg", "user_name={0}".format(getpass.getuser())])
         command.extend(["--build-arg", "user_id={0}".format(os.getuid())])
         command.extend(["--build-arg", "group_id={0}".format(os.getgid())])

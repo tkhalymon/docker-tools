@@ -113,8 +113,7 @@ if __name__ == "__main__":
                         help="Build image with root user")
     parser.add_argument("cmd", type=str, nargs="?", action="append", default=None,
                         help="Command to be executed in container")
-    args = parser.parse_args()
-
+    args, docker_args = parser.parse_known_args()
     command = []
     if args.gpu:
         # 1-10 numbers in [0, 9]
@@ -130,6 +129,7 @@ if __name__ == "__main__":
         command.append("docker")
 
     command.extend(["run", "-it", "--rm"])
+    command.extend(docker_args)
     if not args.root:
         command.extend(["--user", "{0}:{1}".format(os.getuid(), os.getgid())])
     command.extend(getMounts(args.mount))
