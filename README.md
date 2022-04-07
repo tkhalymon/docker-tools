@@ -7,6 +7,16 @@ Wrappers for simplified docker build and run
 
 `drun` is just a wrapper for docker run, which adds `-it` and `--rm` flags by default.
 
+## Installation
+
+To install `docker-tools`, just run
+
+    ./install
+
+If you need to uninstall `docker-tools`, you can use
+
+    ./uninstall
+
 ## Usage
 
 Interfaces of `dbuild` and `drun` are the same as `docker build` and `docker run` respectively, so to build image you type
