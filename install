@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+mkdir -p $HOME/.local/bin/ $HOME/.bash_completion.d/
+FULL_PATH_TO_SCRIPT="$(realpath "${BASH_SOURCE[-1]}")"
+SCRIPT_DIRECTORY="$(dirname "$FULL_PATH_TO_SCRIPT")"
+cp $SCRIPT_DIRECTORY/dbuild $SCRIPT_DIRECTORY/drun $HOME/.local/bin
+cp bash_completion/docker-tools.bash $HOME/.bash_completion.d/
+ENABLE_COMPLETION=". $HOME/.bash_completion.d/docker-tools.bash"
+if ! grep -q "$ENABLE_COMPLETION" "$HOME/.bashrc"; then
+    echo "$ENABLE_COMPLETION" >> "$HOME/.bashrc"
+fi
+echo "Please restart shell to enable auto-complete features"
