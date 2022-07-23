@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+ENABLE_COMPLETION=". $HOME/.bash_completion.d/docker-tools.bash"
+sed -i "\|$ENABLE_COMPLETION|d" $HOME/.bashrc
+rm $HOME/.local/bin/dbuild $HOME/.local/bin/drun
+rm $HOME/.bash_completion.d/docker-tools.bash

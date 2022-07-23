@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+set -e
+
+# root check
+if [[ "$UID" -eq 0 ]]; then
+    fail "This script is not intended to work from root user"
+fi
+
+docker build $@
+
+function get_tag() {
+    for (( i = 1; i <= $#; i++)); do
+        if [ ${!i} = "-t" ]
+        then ((i++))
+            TAG=${!i};
+        fi
+    done
+    echo $TAG
+}
+
+function get_new_tag() {
+    if [[ "$1" =~ $(whoami)/([^:]+)(:.+)? ]]; then
+        echo $1
+    else
+        echo $(whoami)/$1
+    fi
+}
+
+
+TAG=$(get_tag $@)
+NEW_TAG=$(get_new_tag $TAG)
+# echo "$TAG > $NEW_TAG"
+
+echo "FROM $TAG
+RUN groupadd -g $(id -g) $(whoami) && \
+    useradd -mu $(id -u) -g $(id -g) -s /bin/bash $(whoami) && \
+    usermod -aG sudo $(whoami) && \
+    apt-get update && apt-get install -y sudo && \
+    echo \"ALL ALL = (ALL) NOPASSWD: ALL\" >> /etc/sudoers
+USER $(whoami)
+" | docker build - -t $NEW_TAG
