@@ -36,7 +36,8 @@ echo "FROM $TAG
 RUN groupadd -g $(id -g) $(whoami) && \
     useradd -mu $(id -u) -g $(id -g) -s /bin/bash $(whoami) && \
     usermod -aG sudo $(whoami) && \
-    apt-get update && apt-get install -y sudo && \
+    apt-get update && apt-get install -y sudo bash-completion && \
     echo \"ALL ALL = (ALL) NOPASSWD: ALL\" >> /etc/sudoers
+ENV TERM=xterm-256color
 USER $(whoami)
 " | docker build - -t $NEW_TAG
